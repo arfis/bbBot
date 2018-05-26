@@ -29,14 +29,6 @@ bot.command('admin', (ctx) => ctx.reply('Naši admini sú: @Lubos43 a @Mesty17')
 bot.hears(/reverse (.+)/, ({ match, reply }) => reply(match[1].split('').reverse().join('')))
 
 
-bot.command((ctx) => {
-        const key = ctx.message.text.replace('/', '');
-        if (words[key]) {
-            return ctx.reply(words[key]);
-        }
-})
-
-
 
 bot.hears(/find (.*)/, ({match, reply}) => reply(`https://www.google.com/search?q=${match[1]}`))
 bot.hears('top', ({reply}) => reply('https://bitcoach.net'));
@@ -57,5 +49,11 @@ bot.on('new_chat_members', (ctx) => {
 // return ctx.replyWithMarkdown(`Bitcoach counter:_ ${ctx.session.counter}`)
 // })
 
+bot.command((ctx) => {
+        const key = ctx.message.text.replace('/', '');
+        if (words[key]) {
+            return ctx.reply(words[key]);
+        }
+})
 
 bot.startPolling()

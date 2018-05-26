@@ -1,5 +1,5 @@
 const words = {
-'hodl' : 'Preklep v slovese “hold”, teda držať, ktorý sa vyvinul až do skrátenej formy „Hold on for Dear Life',
+'hodl' : 'Preklep v slovese “hold”, teda držať, ktorý sa vyvinul až do skrátenej formy „Hold on for Dear Life"',
 'fud':    'Fear, Uncertainty and Doubt -  Strach, Neistota, Pochybnosti.',
     'fomo': 'Fear of Missing Out - Strach zo zmeškania príležitosti.',
     'dyor': 'Do Your Own Research – Robte si svoj vlastný prieskum.',
