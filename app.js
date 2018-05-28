@@ -12,6 +12,7 @@ const sayYoMiddleware = ({ reply }, next) => reply('yo').then(() => next())
 const session = require('telegraf/session')
 const randomPhoto = 'https://picsum.photos/200/300/?random'
 const words = require('./dictionary');
+const axios = require('axios');
 
 bot.use(session())
 
@@ -28,6 +29,50 @@ bot.command('admin', (ctx) => ctx.reply('Naši admini sú: @Lubos43 a @Mesty17')
 // Wow! RegEx
 bot.hears(/reverse (.+)/, ({ match, reply }) => reply(match[1].split('').reverse().join('')))
 
+bot.command('mcap', ({match, replyWithHTML}) => {
+    axios.get('https://api.coinmarketcap.com/v2/global/')
+    .then( response => {
+
+    replyWithHTML('<b>Celkovy cap: </b>' + response.data.data.quotes.USD.total_market_cap.toFixed().replace(/(\d)(?=(\d{3})+(,|$))/g, '$1,') + '$\n'
+                    + '<b>Zmena za 24 hodin: </b>' + response.data.data.quotes.USD.total_volume_24h.toFixed().replace(/(\d)(?=(\d{3})+(,|$))/g, '$1,') + '$\n');
+})
+.catch(error => {
+    replyWithHTML("Prr nie tak rychlo ");
+})});
+
+bot.hears(/p (.+)/, ({match, replyWithHTML}) => {
+    axios.get('https://api.coinmarketcap.com/v2/listings/')
+    .then(response => {
+        // console.log(JSON.stringify(response.data));
+        var found = response.data.data.find(coin => coin.symbol.toLowerCase() === match[1].toLowerCase());
+       if (!found) {
+           replyWithHTML("Nic som nenasiel 🙁 ");
+       } else {
+
+           axios.get('https://api.coinmarketcap.com/v2/ticker/'+found.id)
+               .then(response => {
+                   console.log(response.data.data);
+                   var change = response.data.data.quotes.USD.percent_change_24h;
+                   var changeString;
+                   if (change > 0) {
+                       changeString = '<i color="green">'+change+'</i>'
+                   } else {
+                       changeString = '<i color="red">'+change+'</i>'
+                   }
+                replyWithHTML('<b>Meno:</b> ' + response.data.data.name +
+                        '\n<b>Zmena za 24 hodin:</b> ' + changeString + '%\n'
+                    + '<b>Market cap:</b> ' + response.data.data.quotes.USD.market_cap.toFixed().replace(/(\d)(?=(\d{3})+(,|$))/g, '$1,') + '$\n')
+               })
+           .catch(error => {
+               replyWithHTML("Prr nie tak rychlo ");
+           });
+       }
+        //reply(JSON.stringify());
+    })
+    .catch(error => {
+        replyWithHTML("Prr nie tak rychlo ");
+    });
+})
 
 
 bot.hears(/find (.*)/, ({match, reply}) => reply(`https://www.google.com/search?q=${match[1]}`))
@@ -48,6 +93,11 @@ bot.on('new_chat_members', (ctx) => {
 //     ctx.session.counter++
 // return ctx.replyWithMarkdown(`Bitcoach counter:_ ${ctx.session.counter}`)
 // })
+
+bot.hears(/ban (.*)/, (ctx) => {
+    console.log(ctx);
+    ctx.reply(`https://www.google.com/search`);
+})
 
 bot.command((ctx) => {
         const key = ctx.message.text.replace('/', '');
