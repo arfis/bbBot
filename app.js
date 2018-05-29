@@ -43,25 +43,40 @@ bot.command('mcap', ({match, replyWithHTML}) => {
 bot.hears(/p (.+)/, ({match, replyWithHTML}) => {
     axios.get('https://api.coinmarketcap.com/v2/listings/')
     .then(response => {
-        // console.log(JSON.stringify(response.data));
         var found = response.data.data.find(coin => coin.symbol.toLowerCase() === match[1].toLowerCase());
        if (!found) {
            replyWithHTML("Nic som nenasiel 🙁 ");
        } else {
 
-           axios.get('https://api.coinmarketcap.com/v2/ticker/'+found.id)
+           axios.get('https://api.coinmarketcap.com/v2/ticker/'+found.id+'/?convert=ETH')
                .then(response => {
-                   console.log(response.data.data);
-                   var change = response.data.data.quotes.USD.percent_change_24h;
-                   var changeString;
-                   if (change > 0) {
-                       changeString = '<i color="green">'+change+'</i>'
-                   } else {
-                       changeString = '<i color="red">'+change+'</i>'
-                   }
-                replyWithHTML('<b>Meno:</b> ' + response.data.data.name +
-                        '\n<b>Zmena za 24 hodin:</b> ' + changeString + '%\n'
-                    + '<b>Market cap:</b> ' + response.data.data.quotes.USD.market_cap.toFixed().replace(/(\d)(?=(\d{3})+(,|$))/g, '$1,') + '$\n')
+                   const data = response.data.data;
+
+                   var changeUSD = data.quotes.USD.percent_change_24h;
+                   var changeETH = data.quotes.ETH.percent_change_24h;
+                   var priceUSD = '$' + data.quotes.USD.price;
+                    var priceETH = data.quotes.ETH.price;
+                    var volume = data.quotes.USD.market_cap ? '$' + data.quotes.USD.market_cap.toFixed().replace(/(\d)(?=(\d{3})+(,|$))/g, '$1,') : '-';
+                    var name = data.name;
+
+           axios.get('https://api.coinmarketcap.com/v2/ticker/'+found.id+'/?convert=BTC')
+               .then(response => {
+                 var priceBTC = '$' + response.data.data.quotes.BTC.price;
+                 var changeBTC = response.data.data.quotes.BTC.percent_change_24h;
+
+                 changeETH = getChangeWithSmiley(changeETH);
+                 changeBTC = getChangeWithSmiley(changeBTC);
+                 changeUSD = getChangeWithSmiley(changeUSD);
+
+           replyWithHTML('<b>'+name+':</b> ' + priceUSD + ' | ' + changeUSD + '\n'
+               +'<b>ETH: </b>'+ priceETH + ' | ' + changeETH + '\n'
+               +'<b>BTC: </b>'+ priceBTC + ' | ' + changeBTC + '\n'
+               + '<b>Objem: </b>' + volume);
+           })
+           .catch(error => {
+               replyWithHTML('Daj mi chvilku oddychu');
+           })
+
                })
            .catch(error => {
                replyWithHTML("Prr nie tak rychlo ");
@@ -74,7 +89,20 @@ bot.hears(/p (.+)/, ({match, replyWithHTML}) => {
     });
 })
 
-
+function getChangeWithSmiley(change) {
+    if (change) {
+        changeAbs = Math.abs(change);
+        if (changeAbs > 80) {
+            return change += change > 0 ? '% 🤑' : '% 😭';
+        } else if (changeAbs > 30) {
+            return change += change > 0 ? '% 😍' : '% 😢';
+        } else {
+            return change += change > 0 ? '% 🙂' : '% 🙁';
+        }
+    } else {
+        return change;
+    }
+}
 bot.hears(/find (.*)/, ({match, reply}) => reply(`https://www.google.com/search?q=${match[1]}`))
 bot.hears('top', ({reply}) => reply('https://bitcoach.net'));
 // Login widget events
@@ -82,7 +110,6 @@ bot.on('connected_website', ({ reply }) => reply('Website connected'))
 
 bot.on('new_chat_members', (ctx) => {
     for(let user of ctx.message.new_chat_members) {
-        console.log(user);
         ctx.reply(`Vitaj ${user.first_name}! Nezabudni si prečítať pravidlá v pripnutej správe a pridať sa aj do nášho channelu: https://t.me/bitcoach`)
     }
     });
